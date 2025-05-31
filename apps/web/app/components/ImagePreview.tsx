@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import ImageModal from './ImageModal';
 
 interface ImagePreviewProps {
   imageUrl?: string;
@@ -21,6 +22,7 @@ export default function ImagePreview({
   const [mounted, setMounted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -30,6 +32,12 @@ export default function ImagePreview({
   if (!mounted || !imageUrl) {
     return null;
   }
+
+  const handleImageClick = () => {
+  if (imageLoaded && !imageError) {
+    setIsModalOpen(true);
+  }
+};
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -105,15 +113,16 @@ export default function ImagePreview({
 
       {/* Actual Image */}
       <img
-        src={imageUrl}
-        alt={alt}
-        className={`rounded-lg object-cover w-full transition-opacity duration-300 ${
-          imageLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
-        style={{ height: '192px' }} // h-48 equivalent
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-      />
+  src={imageUrl}
+  alt={alt}
+  className={`rounded-lg object-cover w-full transition-opacity duration-300 cursor-pointer hover:opacity-90 ${
+    imageLoaded ? 'opacity-100' : 'opacity-0'
+  }`}
+  style={{ height: '192px' }}
+  onLoad={handleImageLoad}
+  onError={handleImageError}
+  onClick={handleImageClick} // ✨ NUEVO
+/>
 
       {/* Image Info Tooltip */}
       {imagePrompt && imageLoaded && (
@@ -134,6 +143,16 @@ export default function ImagePreview({
           </div>
         </div>
       )}
+
+      {mounted && (
+        <ImageModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            imageUrl={imageUrl}
+            imagePrompt={imagePrompt}
+            alt={alt}
+        />
+        )}
 
       {/* Expiration Warning for DALL-E URLs */}
       {imageUrl.includes('oaidalleapi') && imageStatus === 'generated' && (
