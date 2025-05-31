@@ -12,13 +12,18 @@
     "indexes": "tsx src/scripts/create-indexes.ts"
   },
   "dependencies": {
-    "mongodb": "^6.0.0",
-    "zod": "^3.22.0",
-    "dotenv": "^16.3.0"
+    "dotenv": "^16.5.0",
+    "mongodb": "^6.16.0",
+    "zod": "^3.25.42"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
-  }
+    "@types/node": "^20.17.57",
+    "tsx": "^4.19.4",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }
