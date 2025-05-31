@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { postTemplateModel } from '../../../../../packages/database/src/models/post-template';
 import { generatedPostModel } from '../../../../../packages/database/src/models/generated-post';
+import { generateImageWithDALLE, getFallbackImageUrl } from '@/lib/image-generation';
 
 // Primero necesitas instalar el SDK oficial de Anthropic
 // npm install @anthropic-ai/sdk
@@ -259,14 +260,54 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Content generated using: ${generationMethod}`);
 
-    // 3. Crear GeneratedPost en la BD
+    // 3. ✨ NUEVO - Generar imagen si es necesario
+    let imageData: {
+      imageUrl?: string;
+      imagePrompt?: string;
+      imageStatus: 'generating' | 'generated' | 'failed';
+    } | undefined;
+
+    if (template.needsImage) {
+      console.log('🎨 Template requires image, generating...');
+      
+      try {
+        const imageResult = await generateImageWithDALLE(template, generatedContent.content);
+        
+        if (imageResult.success && imageResult.imageUrl) {
+          imageData = {
+            imageUrl: imageResult.imageUrl,
+            imagePrompt: imageResult.imagePrompt,
+            imageStatus: 'generated'
+          };
+          console.log('✅ Image generated successfully');
+        } else {
+          // Usar imagen de fallback
+          console.log('⚠️ Image generation failed, using fallback');
+          imageData = {
+            imageUrl: getFallbackImageUrl(template),
+            imagePrompt: imageResult.imagePrompt,
+            imageStatus: 'failed'
+          };
+        }
+      } catch (imageError) {
+        console.error('❌ Image generation error:', imageError);
+        imageData = {
+          imageUrl: getFallbackImageUrl(template),
+          imagePrompt: `Failed to generate for: ${template.title}`,
+          imageStatus: 'failed'
+        };
+      }
+    }
+
+    // 4. Crear GeneratedPost en la BD con datos de imagen
     const generatedPost = await generatedPostModel.create(
       templateId,
       generatedContent.content,
-      generatedContent.hashtags
+      generatedContent.hashtags,
+      imageData // ✨ NUEVO parámetro
     );
 
-    // 4. Si necesita review, cambiar estado
+    // 5. Si necesita review, cambiar estado
     if (template.needsReview) {
       await generatedPostModel.updateStatus(
         generatedPost._id.toString(),
@@ -281,7 +322,9 @@ export async function POST(request: NextRequest) {
       data: {
         ...generatedPost,
         status: finalStatus,
-        generationMethod // Para debugging
+        generationMethod, // Para debugging
+        hasImage: !!imageData?.imageUrl,
+        imageGenerated: imageData?.imageStatus === 'generated'
       }
     });
 

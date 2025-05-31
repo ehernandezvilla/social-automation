@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import CreateTemplateModal from './components/CreateTemplateModal';
+import PostCard from './components/PostCard';
 
 interface PostTemplate {
   _id: string;
@@ -22,6 +23,10 @@ interface GeneratedPost {
   templateId: string;
   content: string;
   hashtags: string[];
+  imageUrl?: string;
+  imagePrompt?: string;
+  imageStatus?: 'generating' | 'generated' | 'failed';
+  videoUrl?: string;
   status: 'generating' | 'generated' | 'scheduled' | 'pending_review' | 'approved' | 'rejected' | 'publishing' | 'published' | 'failed' | 'cancelled';
   generatedAt: string;
   reviewedAt?: string;
@@ -39,6 +44,7 @@ interface ApiResponse<T> {
 }
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
   const [templates, setTemplates] = useState<PostTemplate[]>([]);
   const [generatedPosts, setGeneratedPosts] = useState<GeneratedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +56,7 @@ export default function Home() {
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     fetchData();
   }, []);
 
@@ -137,7 +144,10 @@ export default function Home() {
       if (data.success) {
         // Refresh generated posts para mostrar el nuevo
         await fetchData();
-        alert('Post generated successfully! 🎉');
+        
+        // Mensaje más descriptivo basado en la respuesta
+        const hasImage = data.data.imageUrl ? ' with image' : '';
+        alert(`Post generated successfully${hasImage}! 🎉`);
       } else {
         alert(`Error generating post: ${data.error}`);
         console.error('Generation error:', data.details);
@@ -190,6 +200,15 @@ export default function Home() {
     }
   };
 
+  const publishPost = async (postId: string) => {
+    // Placeholder para Instagram integration
+    alert('📱 Instagram integration coming soon! This will publish the post directly to your Instagram account.');
+  };
+
+  const regeneratePost = async (templateId: string) => {
+    await generatePost(templateId);
+  };
+
   // Utility functions
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -205,37 +224,17 @@ export default function Home() {
     return generatedPosts.filter(post => post.templateId === templateId);
   };
 
-  const getStatusColor = (status: GeneratedPost['status']): string => {
-    const colors: Record<GeneratedPost['status'], string> = {
-      'generating': 'bg-blue-100 text-blue-800',
-      'generated': 'bg-green-100 text-green-800',
-      'scheduled': 'bg-indigo-100 text-indigo-800',
-      'pending_review': 'bg-yellow-100 text-yellow-800',
-      'approved': 'bg-emerald-100 text-emerald-800',
-      'rejected': 'bg-red-100 text-red-800',
-      'publishing': 'bg-purple-100 text-purple-800',
-      'published': 'bg-violet-100 text-violet-800',
-      'failed': 'bg-rose-100 text-rose-800',
-      'cancelled': 'bg-gray-100 text-gray-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getStatusIcon = (status: GeneratedPost['status']): string => {
-    const icons: Record<GeneratedPost['status'], string> = {
-      'generating': '🔄',
-      'generated': '✅',
-      'scheduled': '📅',
-      'pending_review': '👁️',
-      'approved': '✅',
-      'rejected': '❌',
-      'publishing': '📤',
-      'published': '🚀',
-      'failed': '💥',
-      'cancelled': '🚫'
-    };
-    return icons[status] || '❓';
-  };
+  // Early return if not mounted to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Loading state
   if (loading) {
@@ -269,8 +268,11 @@ export default function Home() {
     );
   }
 
+  // Calculate stats
   const pendingReviewCount = generatedPosts.filter(p => p.status === 'pending_review').length;
   const approvedCount = generatedPosts.filter(p => p.status === 'approved').length;
+  const publishedCount = generatedPosts.filter(p => p.status === 'published').length;
+  const postsWithImages = generatedPosts.filter(p => p.imageUrl).length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -283,7 +285,7 @@ export default function Home() {
                 Social Automation Dashboard
               </h1>
               <p className="mt-2 text-gray-600">
-                Manage your post templates and generated content
+                Manage your post templates and AI-generated content
               </p>
             </div>
             <button
@@ -301,8 +303,8 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        {/* Enhanced Stats */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-8">
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="p-5">
               <div className="flex items-center">
@@ -374,6 +376,24 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-pink-500 rounded-md flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">{postsWithImages}</span>
+                  </div>
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">With Images</dt>
+                    <dd className="text-lg font-medium text-gray-900">{postsWithImages}</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Templates Grid */}
@@ -407,10 +427,10 @@ export default function Home() {
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <h3 className="text-lg font-medium text-gray-900">{template.title}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{template.context}</p>
-                        <div className="flex items-center space-x-4 mt-2">
+                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{template.context}</p>
+                        <div className="flex items-center space-x-4 mt-3">
                           <span className="text-xs text-gray-500">
-                            Target: {template.targetAudience}
+                            <strong>Target:</strong> {template.targetAudience}
                           </span>
                           <div className="flex flex-wrap gap-1">
                             {template.seoKeywords.slice(0, 3).map((keyword, index) => (
@@ -432,7 +452,7 @@ export default function Home() {
                       <div className="flex items-center space-x-2">
                         {template.needsImage && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                            📷 Image
+                            🎨 AI Image
                           </span>
                         )}
                         {template.needsVideo && (
@@ -448,101 +468,52 @@ export default function Home() {
                         <button
                           onClick={() => generatePost(template._id)}
                           disabled={generating === template._id}
-                          className="bg-blue-500 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded text-sm transition-colors"
+                          className="bg-blue-500 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded text-sm transition-colors flex items-center space-x-1"
                         >
-                          {generating === template._id ? '🔄 Generating...' : '✨ Generate Post'}
+                          {generating === template._id ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <span>Generating...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>✨</span>
+                              <span>Generate Post</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
                   </div>
 
-                  {/* Generated Posts for this template */}
+                  {/* Generated Posts for this template using PostCard component */}
                   {templatePosts.length > 0 && (
                     <div className="px-6 py-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">
-                        Generated Posts ({templatePosts.length})
+                      <h4 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                        <span>Generated Posts ({templatePosts.length})</span>
+                        {templatePosts.some(p => p.imageUrl) && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            🎨 {templatePosts.filter(p => p.imageUrl).length} with images
+                          </span>
+                        )}
                       </h4>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {templatePosts
                           .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())
                           .map((post) => (
-                          <div key={post._id} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
-                            <div className="flex items-start justify-between mb-2">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(post.status)}`}>
-                                {getStatusIcon(post.status)} {post.status.replace('_', ' ').toUpperCase()}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {formatDate(post.generatedAt)}
-                              </span>
-                            </div>
-                            
-                            <p className="text-sm text-gray-900 mb-2 line-clamp-3">{post.content}</p>
-                            
-                            {post.hashtags.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mb-3">
-                                {post.hashtags.map((hashtag, index) => (
-                                  <span key={index} className="text-xs text-blue-600">
-                                    #{hashtag}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-
-                            {post.errorMessage && (
-                              <div className="bg-red-50 border border-red-200 rounded p-2 mb-3">
-                                <p className="text-xs text-red-600">{post.errorMessage}</p>
-                              </div>
-                            )}
-
-                            {/* Action Buttons */}
-                            <div className="flex space-x-2">
-                              {post.status === 'pending_review' && (
-                                <>
-                                  <button
-                                    onClick={() => approvePost(post._id)}
-                                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors"
-                                  >
-                                    ✅ Approve
-                                  </button>
-                                  <button
-                                    onClick={() => rejectPost(post._id)}
-                                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors"
-                                  >
-                                    ❌ Reject
-                                  </button>
-                                </>
-                              )}
-
-                              {post.status === 'approved' && (
-                                <button 
-                                  className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors"
-                                  onClick={() => alert('Instagram integration coming soon! 📱')}
-                                >
-                                  📱 Publish to Instagram
-                                </button>
-                              )}
-
-                              {post.status === 'generated' && !template.needsReview && (
-                                <button 
-                                  className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors"
-                                  onClick={() => alert('Instagram integration coming soon! 📱')}
-                                >
-                                  📱 Publish to Instagram
-                                </button>
-                              )}
-
-                              {(post.status === 'failed' || post.status === 'rejected') && (
-                                <button
-                                  onClick={() => generatePost(template._id)}
-                                  disabled={generating === template._id}
-                                  className="bg-blue-500 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold py-1 px-3 rounded text-xs transition-colors"
-                                >
-                                  🔄 Regenerate
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                            <PostCard
+                              key={post._id}
+                              post={post}
+                              onApprove={approvePost}
+                              onReject={rejectPost}
+                              onRegenerate={regeneratePost}
+                              onPublish={publishPost}
+                              isGenerating={generating === post.templateId}
+                            />
+                          ))}
                       </div>
                     </div>
                   )}
@@ -553,7 +524,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* Create Template Modal - Imported Component */}
+      {/* Create Template Modal */}
       <CreateTemplateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}

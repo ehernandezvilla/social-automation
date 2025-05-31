@@ -14,16 +14,23 @@ export type PostStatus =
   | 'failed'
   | 'cancelled';
 
-export type ImageStatus = 'generating' | 'generated' | 'failed';
+// ✨ NUEVO: Estados para generación de imágenes
+export type ImageStatus = 
+  | 'generating'
+  | 'generated' 
+  | 'failed';
 
 export interface GeneratedPost {
   _id: ObjectId;
   templateId: ObjectId;
   content: string;
   hashtags: string[];
-  imageUrl?: string;
-  imagePrompt?: string;
-  imageStatus?: ImageStatus;
+  
+  // ✨ NUEVOS CAMPOS PARA IMÁGENES
+  imageUrl?: string;           // URL final de la imagen
+  imagePrompt?: string;        // Prompt usado para generar
+  imageStatus?: ImageStatus;   // Estado de generación de imagen
+  
   videoUrl?: string;
   status: PostStatus;
   generatedAt: Date;
@@ -44,7 +51,17 @@ class GeneratedPostModel {
     return this.collection;
   }
 
-  async create(templateId: string, content: string, hashtags: string[]): Promise<GeneratedPost> {
+  // ✨ MÉTODO ACTUALIZADO - Ahora acepta parámetros de imagen
+  async create(
+    templateId: string, 
+    content: string, 
+    hashtags: string[],
+    imageData?: {
+      imageUrl?: string;
+      imagePrompt?: string;
+      imageStatus?: ImageStatus;
+    }
+  ): Promise<GeneratedPost> {
     const collection = await this.getCollection();
     
     const post: Omit<GeneratedPost, '_id'> = {
@@ -54,6 +71,13 @@ class GeneratedPostModel {
       status: 'generated',
       generatedAt: new Date(),
       retryCount: 0,
+      
+      // ✨ CAMPOS DE IMAGEN OPCIONALES
+      ...(imageData && {
+        imageUrl: imageData.imageUrl,
+        imagePrompt: imageData.imagePrompt,
+        imageStatus: imageData.imageStatus,
+      })
     };
 
     const result = await collection.insertOne(post as GeneratedPost);
@@ -91,6 +115,25 @@ class GeneratedPostModel {
     const result = await collection.updateOne(
       { _id: new ObjectId(id) },
       { $set: updateData }
+    );
+
+    return result.modifiedCount > 0;
+  }
+
+  // ✨ NUEVO MÉTODO - Actualizar datos de imagen
+  async updateImageData(
+    id: string, 
+    imageData: {
+      imageUrl?: string;
+      imagePrompt?: string;
+      imageStatus: ImageStatus;
+    }
+  ): Promise<boolean> {
+    const collection = await this.getCollection();
+    
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: imageData }
     );
 
     return result.modifiedCount > 0;
