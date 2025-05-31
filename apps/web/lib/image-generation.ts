@@ -9,40 +9,123 @@ interface ImageGenerationResult {
 }
 
 /**
- * Genera un prompt optimizado para DALL-E basado en el template
+ * Analiza el contenido del post para extraer conceptos clave
  */
-function createImagePrompt(template: PostTemplate, textContent: string): string {
-  // Extraer conceptos clave del contenido
-  const firstKeyword = template.seoKeywords[0] || 'technology';
-  const contentPreview = textContent.substring(0, 100).toLowerCase();
+function extractKeyConceptsFromContent(content: string): {
+  mainTopic?: string;
+  actionWords: string[];
+  visualElements: string[];
+} {
+  const contentLower = content.toLowerCase();
+  
+  // Detectar temas principales por palabras clave
+  const topicPatterns = {
+    'kanban': 'kanban board with cards and columns',
+    'agile': 'agile development team collaboration',
+    'productivity': 'productivity tools and workflow optimization',
+    'ai': 'artificial intelligence and machine learning concepts',
+    'innovation': 'innovation and technology advancement',
+    'business': 'professional business environment',
+    'startup': 'startup culture and entrepreneurship',
+    'marketing': 'digital marketing and social media',
+    'data': 'data analytics and visualization',
+    'cloud': 'cloud computing and digital infrastructure',
+    'mobile': 'mobile applications and devices',
+    'automation': 'automation and efficient processes'
+  };
 
-  console.log('🔍 Extracting keywords from content:', contentPreview);
-  
-  // Determinar estilo según el contexto
-  let style = 'professional, clean, modern';
-  let subject = firstKeyword;
-  
-  // Personalizar según keywords
-  if (template.seoKeywords.some(k => ['tech', 'technology', 'AI', 'innovation'].includes(k.toLowerCase()))) {
-    style = 'modern tech, sleek, professional, blue and white color scheme';
-    subject = 'technology and innovation concepts';
-  } else if (template.seoKeywords.some(k => ['motivation', 'success', 'growth'].includes(k.toLowerCase()))) {
-    style = 'inspirational, uplifting, warm colors, professional';
-    subject = 'success and growth concepts';
-  } else if (template.seoKeywords.some(k => ['business', 'entrepreneur'].includes(k.toLowerCase()))) {
-    style = 'corporate, professional, sophisticated, business-like';
-    subject = 'business and entrepreneurship';
+  // Encontrar el tema principal
+  let mainTopic: string | undefined;
+  for (const [keyword, description] of Object.entries(topicPatterns)) {
+    if (contentLower.includes(keyword)) {
+      mainTopic = description;
+      break;
+    }
   }
 
-  // Crear prompt optimizado para redes sociales
-  const prompt = `Create a ${style} image representing ${subject}. 
-  The image should be perfect for social media posting, visually engaging, 
-  and professional. No text overlays needed. 
-  Style: ${style}. 
-  Theme: ${template.context.substring(0, 50)}...
-  Square format suitable for Instagram.`;
+  // Extraer palabras de acción/movimiento
+  const actionWords: string[] = [];
+  const actionPatterns = [
+    'transform', 'boost', 'streamline', 'optimize', 'enhance', 'improve',
+    'accelerate', 'revolutionize', 'innovate', 'collaborate', 'visualize',
+    'automate', 'scale', 'grow', 'connect', 'integrate'
+  ];
+  
+  actionPatterns.forEach(action => {
+    if (contentLower.includes(action)) {
+      actionWords.push(action);
+    }
+  });
 
-  return prompt.trim().replace(/\s+/g, ' ');
+  // Elementos visuales sugeridos
+  const visualElements: string[] = [];
+  if (contentLower.includes('team')) visualElements.push('diverse team collaboration');
+  if (contentLower.includes('workflow')) visualElements.push('organized workflow diagram');
+  if (contentLower.includes('data')) visualElements.push('data charts and graphs');
+  if (contentLower.includes('mobile')) visualElements.push('mobile devices and apps');
+  if (contentLower.includes('growth')) visualElements.push('upward trending arrows');
+
+  return { mainTopic, actionWords, visualElements };
+}
+
+/**
+ * Genera un prompt optimizado para DALL-E basado en el contenido real del post
+ */
+function createImagePrompt(template: PostTemplate, textContent: string): string {
+  console.log('🔍 Analyzing content for image prompt:', textContent.substring(0, 100));
+  
+  // Analizar el contenido real
+  const analysis = extractKeyConceptsFromContent(textContent);
+  
+  // Determinar estilo base según las keywords del template
+  let baseStyle = 'professional, modern, clean';
+  let colorScheme = 'blue and white';
+  
+  if (template.seoKeywords.some(k => ['tech', 'technology', 'AI', 'innovation'].includes(k.toLowerCase()))) {
+    baseStyle = 'modern tech, sleek, minimalist';
+    colorScheme = 'blue, white, and subtle gradients';
+  } else if (template.seoKeywords.some(k => ['business', 'entrepreneur', 'corporate'].includes(k.toLowerCase()))) {
+    baseStyle = 'professional business, sophisticated';
+    colorScheme = 'navy blue, white, and gray accents';
+  } else if (template.seoKeywords.some(k => ['motivation', 'success', 'growth'].includes(k.toLowerCase()))) {
+    baseStyle = 'inspirational, dynamic, uplifting';
+    colorScheme = 'warm blues, orange accents, and white';
+  }
+
+  // Construir el prompt basado en el análisis
+  let prompt = `Create a ${baseStyle} image`;
+  
+  // Agregar tema principal si se detectó
+  if (analysis.mainTopic) {
+    prompt += ` featuring ${analysis.mainTopic}`;
+  } else {
+    // Fallback a keywords del template
+    const primaryKeyword = template.seoKeywords[0] || 'technology';
+    prompt += ` representing ${primaryKeyword} concepts`;
+  }
+
+  // Agregar elementos visuales específicos
+  if (analysis.visualElements.length > 0) {
+    prompt += `, incorporating ${analysis.visualElements.slice(0, 2).join(' and ')}`;
+  }
+
+  // Agregar contexto de acción si hay palabras relevantes
+  if (analysis.actionWords.length > 0) {
+    const primaryAction = analysis.actionWords[0];
+    prompt += `, conveying the concept of ${primaryAction}ing and progress`;
+  }
+
+  // Especificaciones técnicas
+  prompt += `. Style: ${baseStyle} with ${colorScheme} color scheme.`;
+  prompt += ` Perfect for social media posting, visually engaging and professional.`;
+  prompt += ` No text overlays needed.`;
+  prompt += ` Square format suitable for Instagram.`;
+  prompt += ` High contrast, clear composition, modern aesthetic.`;
+
+  const finalPrompt = prompt.trim().replace(/\s+/g, ' ');
+  console.log('🎨 Generated contextual prompt:', finalPrompt);
+  
+  return finalPrompt;
 }
 
 /**
