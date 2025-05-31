@@ -202,6 +202,8 @@ export default function Home() {
 
   const publishPost = async (postId: string) => {
     // Placeholder para Instagram integration
+    console.error('Instagram integration not implemented yet');
+    console.log(`Publishing post ${postId} to Instagram...`);
     alert('📱 Instagram integration coming soon! This will publish the post directly to your Instagram account.');
   };
 
@@ -210,15 +212,15 @@ export default function Home() {
   };
 
   // Utility functions
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   return new Date(dateString).toLocaleDateString('en-US', {
+  //     year: 'numeric',
+  //     month: 'short',
+  //     day: 'numeric',
+  //     hour: '2-digit',
+  //     minute: '2-digit'
+  //   });
+  // };
 
   const getPostsByTemplate = (templateId: string): GeneratedPost[] => {
     return generatedPosts.filter(post => post.templateId === templateId);
@@ -271,7 +273,7 @@ export default function Home() {
   // Calculate stats
   const pendingReviewCount = generatedPosts.filter(p => p.status === 'pending_review').length;
   const approvedCount = generatedPosts.filter(p => p.status === 'approved').length;
-  const publishedCount = generatedPosts.filter(p => p.status === 'published').length;
+  // const publishedCount = generatedPosts.filter(p => p.status === 'published').length;
   const postsWithImages = generatedPosts.filter(p => p.imageUrl).length;
 
   return (
