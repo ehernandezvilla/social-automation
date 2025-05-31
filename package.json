@@ -7,9 +7,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "clean": "rm -rf dist",
-    "seed": "tsx src/scripts/seed.ts",
-    "reset": "tsx src/scripts/reset.ts",
-    "indexes": "tsx src/scripts/create-indexes.ts"
+    "seed": "tsx package/database/src/scripts/seed.ts",
+    "reset": "tsx package/database/src/scripts/reset.ts",
+    "indexes": "tsx package/database/src/scripts/create-indexes.ts"
   },
   "dependencies": {
     "dotenv": "^16.5.0",
