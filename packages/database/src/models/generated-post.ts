@@ -14,12 +14,16 @@ export type PostStatus =
   | 'failed'
   | 'cancelled';
 
+export type ImageStatus = 'generating' | 'generated' | 'failed';
+
 export interface GeneratedPost {
   _id: ObjectId;
   templateId: ObjectId;
   content: string;
   hashtags: string[];
   imageUrl?: string;
+  imagePrompt?: string;
+  imageStatus?: ImageStatus;
   videoUrl?: string;
   status: PostStatus;
   generatedAt: Date;
