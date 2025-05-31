@@ -2,7 +2,6 @@
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
     "build": {
-      "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "dev": {
@@ -16,6 +15,15 @@
       "dependsOn": ["build"]
     },
     "clean": {
+      "cache": false
+    },
+    "db:seed": {
+      "cache": false
+    },
+    "db:indexes": {
+      "cache": false
+    },
+    "db:test": {
       "cache": false
     }
   }
