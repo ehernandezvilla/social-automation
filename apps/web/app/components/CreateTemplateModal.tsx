@@ -166,8 +166,8 @@ export default function CreateTemplateModal({ isOpen, onClose, onSubmit, isLoadi
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.title ? 'border-red-300' : 'border-gray-300'
+              className={`text-gray-800 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.title ? 'border-red-300' : 'border-gray-400'
               }`}
               placeholder="e.g., Tech Innovation Monday"
               maxLength={200}
@@ -188,7 +188,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSubmit, isLoadi
               value={formData.context}
               onChange={handleInputChange}
               rows={4}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`text-gray-800 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 errors.context ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="Describe what kind of content should be generated. Be specific about tone, style, key messages, etc."
@@ -210,7 +210,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSubmit, isLoadi
               name="targetAudience"
               value={formData.targetAudience}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`text-gray-800 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 errors.targetAudience ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="e.g., Tech professionals and entrepreneurs aged 25-45"
@@ -232,7 +232,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSubmit, isLoadi
               name="seoKeywords"
               value={formData.seoKeywords}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`text-gray-800 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 errors.seoKeywords ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="technology, innovation, AI, future (comma separated, max 20)"
@@ -255,7 +255,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSubmit, isLoadi
               value={formData.links}
               onChange={handleInputChange}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="text-gray-800 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="https://example.com/article1&#10;https://example.com/article2&#10;(one link per line, max 10)"
               disabled={isLoading}
             />
